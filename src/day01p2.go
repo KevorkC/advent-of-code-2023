@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"unicode"
 )
 
@@ -42,7 +41,6 @@ func firstAndLastInt(line string) Pair {
 }
 
 func lineLiteralizer(originalLine string) string {
-
 	wordToNumber := map[string]string{
 		"one":   "1",
 		"two":   "2",
@@ -53,18 +51,10 @@ func lineLiteralizer(originalLine string) string {
 		"seven": "7",
 		"eight": "8",
 		"nine":  "9",
-		"ten":   "10",
 	}
 
-	// Search and replace words with their number equivalent
-	literalLine := originalLine
-	for word, number := range wordToNumber {
-		literalLine = strings.ReplaceAll(literalLine, word, number)
-	}
-
-	fmt.Println("\nOriginal line:", originalLine)
+	fmt.Println("Original line:", originalLine)
 	fmt.Println("Literal line:", literalLine)
-
 	return literalLine
 }
 
