@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"unicode"
 )
 
@@ -40,6 +41,33 @@ func firstAndLastInt(line string) Pair {
 	return pair
 }
 
+func lineLiteralizer(originalLine string) string {
+
+	wordToNumber := map[string]string{
+		"one":   "1",
+		"two":   "2",
+		"three": "3",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
+		"seven": "7",
+		"eight": "8",
+		"nine":  "9",
+		"ten":   "10",
+	}
+
+	// Search and replace words with their number equivalent
+	literalLine := originalLine
+	for word, number := range wordToNumber {
+		literalLine = strings.ReplaceAll(literalLine, word, number)
+	}
+
+	fmt.Println("\nOriginal line:", originalLine)
+	fmt.Println("Literal line:", literalLine)
+
+	return literalLine
+}
+
 func main() {
 	var filePath string = "files/day01"
 	file, err := os.Open(filePath)
@@ -56,7 +84,11 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		pairList = append(pairList, firstAndLastInt(line))
+
+		// Convert each word to its number equivalent
+		literalLine := lineLiteralizer(line)
+
+		pairList = append(pairList, firstAndLastInt(literalLine))
 	}
 
 	var total_sum int = 0
