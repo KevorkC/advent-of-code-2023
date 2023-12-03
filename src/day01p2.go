@@ -1,3 +1,5 @@
+// Can't account for the case of "twone", returns (2,2)
+
 package main
 
 import (
@@ -41,6 +43,18 @@ func firstAndLastInt(line string) Pair {
 }
 
 func lineLiteralizer(originalLine string) string {
+	// fmt.Println("\nOriginal line:  ", originalLine)
+
+	var replacedFirst string = replaceFirstWord(originalLine)
+	// fmt.Println("Replaced first: ", replacedFirst)
+
+	var replacedBoth string = replaceLastWord(replacedFirst)
+	// fmt.Println("Literal line:   ", replacedBoth)
+
+	return replacedBoth
+}
+
+func replaceFirstWord(originalLine string) string {
 	wordToNumber := map[string]string{
 		"one":   "1",
 		"two":   "2",
@@ -53,9 +67,37 @@ func lineLiteralizer(originalLine string) string {
 		"nine":  "9",
 	}
 
-	fmt.Println("Original line:", originalLine)
-	fmt.Println("Literal line:", literalLine)
-	return literalLine
+	for i := 0; i < len(originalLine); i++ {
+		for word, number := range wordToNumber {
+			if len(word) <= len(originalLine[i:]) && originalLine[i:i+len(word)] == word {
+				return originalLine[:i] + number + originalLine[i+len(word):]
+			}
+		}
+	}
+	return originalLine // Return the original string if no replacement is done
+}
+
+func replaceLastWord(originalLine string) string {
+	wordToNumber := map[string]string{
+		"one":   "1",
+		"two":   "2",
+		"three": "3",
+		"four":  "4",
+		"five":  "5",
+		"six":   "6",
+		"seven": "7",
+		"eight": "8",
+		"nine":  "9",
+	}
+
+	for i := len(originalLine); i >= 0; i-- {
+		for word, number := range wordToNumber {
+			if i-len(word) >= 0 && originalLine[i-len(word):i] == word {
+				return originalLine[:i-len(word)] + number + originalLine[i:]
+			}
+		}
+	}
+	return originalLine // Return the original string if no replacement is done
 }
 
 func main() {
@@ -66,18 +108,17 @@ func main() {
 	}
 	defer file.Close() // Close file when main() ends or program crashes
 
-	// const testStr string = "lkj8asd2j"
-	// fmt.Println(firstAndLastInt(testStr))
-
 	// List of pairs
 	var pairList []Pair
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		fmt.Println("\nOriginal Line:    ", line)
 		// Convert each word to its number equivalent
-		literalLine := lineLiteralizer(line)
+		var literalLine string = lineLiteralizer(line)
 
+		fmt.Println("Literalized line: ", literalLine)
 		pairList = append(pairList, firstAndLastInt(literalLine))
 	}
 
@@ -87,4 +128,13 @@ func main() {
 	}
 
 	fmt.Println(total_sum)
+
+	// const testStr string = "xtwonexonextwonex"
+	const testStr string = "twone"
+	fmt.Println(testStr)
+	var replaced string = replaceFirstWord(testStr)
+	fmt.Println(replaced)
+	replaced = replaceLastWord(replaced)
+	fmt.Println(replaced)
+	fmt.Println(firstAndLastInt(replaced))
 }
