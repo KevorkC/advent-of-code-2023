@@ -14,14 +14,13 @@ type CubeSet struct {
 	blue  int
 }
 
-// Config: 12 red cubes, 13 green cubes, and 14 blue cubes
 // Example:
 // Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 
-func cubeSetParser(line string) CubeSet {
-	cubes := CubeSet{red: 0, green: 0, blue: 0}
-	handfuls := strings.Split(strings.Split(line, ":")[1], ";") // Removing the Game Id prefix and splitting across the ";" seperator
-	// fmt.Println("Handfuls:", handfuls)
+func gamePowerCalculator(line string) int {
+	var cubeMin CubeSet = CubeSet{red: 0, green: 0, blue: 0}
+	handfuls := strings.Split(line, ";")
+	fmt.Println("Handfuls:", handfuls)
 	for _, handful := range handfuls {
 		colors := strings.Split(handful, ",")
 		for _, color := range colors {
@@ -32,31 +31,23 @@ func cubeSetParser(line string) CubeSet {
 				fmt.Println("Error - Failed to convert string 'amount' to intreger:", err)
 			}
 			var color string = amountAndColor[2]
-
 			switch color {
 			case "red":
-				cubes.red += amount
+				if amount > cubeMin.red {
+					cubeMin.red = amount
+				}
 			case "green":
-				cubes.green += amount
+				if amount > cubeMin.green {
+					cubeMin.green = amount
+				}
 			case "blue":
-				cubes.blue += amount
+				if amount > cubeMin.blue {
+					cubeMin.blue = amount
+				}
 			}
 		}
 	}
-	fmt.Println("Line:", line)
-	fmt.Println(cubes, "\n")
-	return cubes
-}
-
-func possibilityOracle(cubeSet CubeSet) bool {
-	var cubeMax CubeSet = CubeSet{red: 12, green: 13, blue: 14}
-	var maxTotalCubes int = cubeMax.red + cubeMax.green + cubeMax.blue
-	var cubeSetTotal int = cubeSet.red + cubeSet.green + cubeSet.blue
-	if cubeSet.red <= cubeMax.red && cubeSet.green <= cubeMax.green && cubeSet.blue <= cubeMax.blue && maxTotalCubes >= cubeSetTotal {
-		return true
-	} else {
-		return false
-	}
+	return cubeMin.red * cubeMin.green * cubeMin.blue
 }
 
 func main() {
@@ -72,16 +63,13 @@ func main() {
 	}
 	defer file.Close()
 
-	// cubeMax := CubeSet{red: 12, green: 13, blue: 14}
-	var possibleGamesSum int = 0
+	var sumOfPowers = 0
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		newCubeSet := cubeSetParser(line)
-		if possibilityOracle(newCubeSet) {
-			possibleGamesSum++
-		}
+		var gameIdAndRest = strings.Split(line, ":")
+		var restOfLine string = gameIdAndRest[1]
+		sumOfPowers += gamePowerCalculator(restOfLine)
 	}
-	fmt.Println(possibleGamesSum)
-
+	fmt.Println(sumOfPowers)
 }
