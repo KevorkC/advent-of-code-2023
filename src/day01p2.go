@@ -1,5 +1,3 @@
-// Can't account for the case of "twone", returns (2,2)
-
 package main
 
 import (
