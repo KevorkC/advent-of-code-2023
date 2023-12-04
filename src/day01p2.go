@@ -17,7 +17,7 @@ type Pair struct {
 
 func firstAndLastInt(line string) Pair {
 	var pair Pair = Pair{-1, -1}
-	// fmt.Println("Line:", line)
+
 	wordToNumber := map[string]string{
 		"one":   "1",
 		"two":   "2",
@@ -72,9 +72,7 @@ func firstAndLastInt(line string) Pair {
 	for i := len(line) - 1; i >= 0; i-- {
 		var assignedSecondNumber bool = false
 		for _, number := range numberList {
-			// fmt.Println("Going to check", line[i:], "for", number)
 			if len(line[i:]) >= len(number) && strings.Contains(line[i:], number) {
-				// fmt.Println("Found the number", number, "in", line[i:])
 				// Found the number
 				if len(number) > 1 {
 					// Look up in the map first
