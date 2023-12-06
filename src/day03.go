@@ -17,7 +17,8 @@ func doesRuneContain(currentRune rune, allowedRunes []rune) bool {
 }
 
 func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
-	var symbol []rune = []rune{'#', '$', '%', '&', '*', '+', '-', '/', '?', '@'}
+	//var symbol []rune = []rune{'#', '$', '%', '&', '*', '+', '-', '/', '?', '@', '\n'}
+	var negativeSymbol []rune = []rune{'.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
 
 	// Checking location of the index relative to the grid
 	var topRow bool = row == 0
@@ -25,8 +26,8 @@ func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
 	var leftCol bool = col == 0
 	var rightCol bool = col == len(grid[row])-1
 
-    // Check surrounding cells
-    for i := -1; i <= 1; i++ { // i = Row
+	// Check surrounding cells
+	for i := -1; i <= 1; i++ { // i = Row
 		for j := -1; j <= 1; j++ { // j = Col
 			if i == 0 && j == 0 { // Skip the current index
 				continue
@@ -43,7 +44,7 @@ func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
 			if bottomRow && i == 1 { // Skip the bottom row
 				continue
 			}
-			if doesRuneContain(grid[row+i][col+j], symbol) {
+			if !doesRuneContain(grid[row+i][col+j], negativeSymbol) {
 				return true
 			}
 		}
@@ -51,7 +52,9 @@ func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
 	return false
 }
 
-/* Example input
+/*
+	Example input
+
 467..114..
 ...*......
 ..35..633.
@@ -63,34 +66,44 @@ func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
 ...$.*....
 .664.598..
 */
-
 func getPartNumber(grid [][]rune) int {
 	var ignoredRunes []rune = []rune{'.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'} // 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57
 	var numeralRunes []rune = ignoredRunes[1:]
-	var sumAdjecentSymbolNumbers int = 0
+	var partNumberSum int = 0
 	// Check each row rune by rune, until a numeral is found
-	fmt.Println("Numerals:", numeralRunes)
 	for y, row := range grid { // row = {467..114..}
-		var foundNumeral bool = false
-		var foundSymbolAroundNumeral = false
 		var tempNumerals string = "" // 467
-		for x, currentRune := range row {      // r = {4}, {$}, {.}, {-}
+		var numberHasSymbolAdjecent bool = false
+		for x, currentRune := range row { // r = {4}, {$}, {.}, {-}
+
 			isCurrentRuneANumeral := doesRuneContain(currentRune, numeralRunes)
 			if isCurrentRuneANumeral {
-				foundNumeral = checkForSymbolAroundIndex(grid, y, x)
-				tempNumerals = tempNumerals + string(currentRune)
-			} else if x == len(grid[y])-1 && foundNumeral && !foundSymbolAroundNumeral {
-				foundNumeral = false
-				currentNumberToSum, e = strconv.Atoi(tempNumerals)
-				if e != nil {
-					fmt.Println("Error converting string to int:", e)
+				tempNumerals += string(currentRune)
+				if checkForSymbolAroundIndex(grid, y, x) {
+					numberHasSymbolAdjecent = true
 				}
-				sumAdjecentSymbolNumbers += currentNumberToSum
 			}
-		fmt.Println(tempNumerals)
-	}
 
-	return sumAdjecentSymbolNumbers
+			if x == len(grid[y])-1 || !doesRuneContain(currentRune, numeralRunes) {
+				if tempNumerals != "" && numberHasSymbolAdjecent {
+					var addNumber, e = strconv.Atoi(tempNumerals)
+					if e != nil {
+						fmt.Println("Error converting string to int:", e)
+					}
+					fmt.Println("Adding number to sum:", addNumber)
+					partNumberSum += addNumber
+					tempNumerals = ""
+					numberHasSymbolAdjecent = false
+				}
+			}
+
+			if !isCurrentRuneANumeral {
+				numberHasSymbolAdjecent = false
+				tempNumerals = ""
+			}
+		}
+	}
+	return partNumberSum
 }
 
 func main() {
@@ -102,7 +115,7 @@ func main() {
 	defer file.Close()
 
 	var grid [][]rune
-	
+
 	// fmt.Printf("%c\n", ignoredRunes[0])
 
 	scanner := bufio.NewScanner(file)
