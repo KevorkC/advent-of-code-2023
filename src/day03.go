@@ -4,29 +4,52 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
+func doesRuneContain(currentRune rune, allowedRunes []rune) bool {
+	for _, allowedRune := range allowedRunes {
+		if currentRune == allowedRune {
+			return true
+		}
+	}
+	return false
+}
 
+func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
+	var symbol []rune = []rune{'#', '$', '%', '&', '*', '+', '-', '/', '?', '@'}
 
-// func checkNumberSourroundingsForSymbol(grid [][]rune, row int, col int, numberDigits int, ignoredRunes []rune) bool {
-// 	// Size of the grid
-// 	var rowLength int = len(grid)
-// 	// var colLength int = len(grid[0])
+	// Checking location of the index relative to the grid
+	var topRow bool = row == 0
+	var bottomRow bool = row == len(grid)-1
+	var leftCol bool = col == 0
+	var rightCol bool = col == len(grid[row])-1
 
-// 	// Is the number located in the beginning or the end of the row?
-// 	beginning, end := false, false
-// 	if row == 0 {
-// 		beginning = true
-// 		fmt.Println("Beginning =", beginning)
-// 	} else if row+numberDigits == rowLength {
-// 		end = true
-// 		fmt.Println("End =", end)
-// 	}
-
-// 	// Checking the above row, then the current row, then the row below
-
-// 	return beginning
-// }
+    // Check surrounding cells
+    for i := -1; i <= 1; i++ { // i = Row
+		for j := -1; j <= 1; j++ { // j = Col
+			if i == 0 && j == 0 { // Skip the current index
+				continue
+			}
+			if leftCol && j == -1 { // Skip the left column
+				continue
+			}
+			if rightCol && j == 1 { // Skip the right column
+				continue
+			}
+			if topRow && i == -1 { // Skip the top row
+				continue
+			}
+			if bottomRow && i == 1 { // Skip the bottom row
+				continue
+			}
+			if doesRuneContain(grid[row+i][col+j], symbol) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 /* Example input
 467..114..
@@ -41,46 +64,6 @@ import (
 .664.598..
 */
 
-func doesRuneContain(currentRune rune, allowedRunes []rune) bool {
-	for _, allowedRune := range allowedRunes {
-		if currentRune == allowedRune {
-			return true
-		}
-	}
-	return false
-}
-
-func checkForSymbolAroundIndex(grid [][]rune, row int, col int) bool {
-	var symbolFound bool = false
-	var symbol []rune = []rune{'#', '$', '%', '&', '*', '+', '-', '/', '?', '@'}
-
-	// Checking location of the index relative to the grid
-	var topRow bool = row == 0
-	var bottomRow bool = row == len(grid)-1
-	var leftCol bool = col == 0
-	var rightCol bool = col == len(grid[row])-1
-
-    // Check surrounding cells
-    for i := -1; i <= 1; i++ {
-		// If the index is not on the top or bottom row, check the row above and below
-        if !topRow && doesRuneContain(grid[row-1][col+i], symbol) && col+i >= 0 && col+i < len(grid[row-1]) {
-            return true
-        }
-        if !bottomRow && doesRuneContain(grid[row+1][col+i], symbol) && col+i >= 0 && col+i < len(grid[row+1]) {
-            return true
-        }
-    }
-
-    if !leftCol && doesRuneContain(grid[row][col-1], symbol) {
-        return true
-    }
-    if !rightCol && doesRuneContain(grid[row][col+1], symbol) {
-        return true
-    }
-
-	return symbolFound
-}
-
 func getPartNumber(grid [][]rune) int {
 	var ignoredRunes []rune = []rune{'.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'} // 46, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57
 	var numeralRunes []rune = ignoredRunes[1:]
@@ -89,15 +72,25 @@ func getPartNumber(grid [][]rune) int {
 	fmt.Println("Numerals:", numeralRunes)
 	for y, row := range grid { // row = {467..114..}
 		var foundNumeral bool = false
+		var foundSymbolAroundNumeral = false
 		var tempNumerals string = "" // 467
 		for x, currentRune := range row {      // r = {4}, {$}, {.}, {-}
-			if doesRuneContain(currentRune, numeralRunes) {
+			isCurrentRuneANumeral := doesRuneContain(currentRune, numeralRunes)
+			if isCurrentRuneANumeral {
 				foundNumeral = checkForSymbolAroundIndex(grid, y, x)
-		}
+				tempNumerals = tempNumerals + string(currentRune)
+			} else if x == len(grid[y])-1 && foundNumeral && !foundSymbolAroundNumeral {
+				foundNumeral = false
+				currentNumberToSum, e = strconv.Atoi(tempNumerals)
+				if e != nil {
+					fmt.Println("Error converting string to int:", e)
+				}
+				sumAdjecentSymbolNumbers += currentNumberToSum
+			}
 		fmt.Println(tempNumerals)
 	}
 
-	return 0
+	return sumAdjecentSymbolNumbers
 }
 
 func main() {
