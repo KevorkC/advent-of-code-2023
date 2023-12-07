@@ -77,26 +77,27 @@ func getPartNumber(grid [][]rune) int {
 		for x, currentRune := range row { // r = {4}, {$}, {.}, {-}
 
 			isCurrentRuneANumeral := doesRuneContain(currentRune, numeralRunes)
+			// The current rune is a numeral
 			if isCurrentRuneANumeral {
 				tempNumerals += string(currentRune)
 				if checkForSymbolAroundIndex(grid, y, x) {
 					numberHasSymbolAdjecent = true
 				}
 			}
-
-			if x == len(grid[y])-1 || !doesRuneContain(currentRune, numeralRunes) {
+			// The current rune is not a numeral, or this is the last rune in the row
+			if !isCurrentRuneANumeral || x == len(grid[y])-1 {
 				if tempNumerals != "" && numberHasSymbolAdjecent {
 					var addNumber, e = strconv.Atoi(tempNumerals)
 					if e != nil {
 						fmt.Println("Error converting string to int:", e)
 					}
-					fmt.Println("Adding number to sum:", addNumber)
+					// fmt.Println("Adding number to sum:", addNumber)
 					partNumberSum += addNumber
 					tempNumerals = ""
 					numberHasSymbolAdjecent = false
 				}
 			}
-
+			// The current rune is not a numeral
 			if !isCurrentRuneANumeral {
 				numberHasSymbolAdjecent = false
 				tempNumerals = ""
