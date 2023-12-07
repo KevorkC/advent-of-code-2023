@@ -4,16 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 )
-
-/* Example grid:
-Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53
-Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19
-Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1
-Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83
-Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36
-Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11
-*/
 
 func main() {
 	var filePath string = "files/day04"
@@ -23,21 +16,63 @@ func main() {
 	}
 	defer file.Close()
 
-	var grid [][]rune
-
 	scanner := bufio.NewScanner(file)
+
+	// Task: Find how many of the winning numbers are on the cards.
+	// Each winning number doubles the points given from that card.
+	var totalPoints int = 0
+
 	for scanner.Scan() {
-		line := scanner.Text()
-		var runeArray []rune = []rune(line)
-		grid = append(grid, runeArray)
-	}
+		var card string = scanner.Text()
+		var winningAndMyNumbers []string = strings.Split(card[9:], " | ")
 
-	// Printing the grid
-	for _, runeArray := range grid {
-		for _, c := range runeArray {
-			fmt.Printf("%c", c)
+		var winningNumbers []int
+		var myNumbers []int
+
+		for _, winningNumber := range strings.Split(winningAndMyNumbers[0], " ") {
+			winningNumber = strings.TrimSpace(winningNumber)
+			if winningNumber == "" {
+				continue
+			}
+			var winningNumberInt, err = strconv.Atoi(winningNumber)
+			if err != nil {
+				fmt.Println("Error - Failed to convert string to intreger:", err, "String:", winningNumber)
+			}
+			winningNumbers = append(winningNumbers, winningNumberInt)
 		}
-		fmt.Println()
+		for _, myNumber := range strings.Split(winningAndMyNumbers[1], " ") {
+			myNumber = strings.TrimSpace(myNumber)
+			if myNumber == "" {
+				continue
+			}
+			var myNumberInt, err = strconv.Atoi(myNumber)
+			if err != nil {
+				fmt.Println("Error - Failed to convert string to intreger:", err, "String:", myNumber)
+			}
+			myNumbers = append(myNumbers, myNumberInt)
+		}
+
+		// fmt.Println("Winning numbers:", winningNumbers)
+		// fmt.Println("My numbers:", myNumbers)
+
+		// Now we have the winning numbers and my numbers in two lists
+		// Compare how many from the winning numbers are in my numbers
+		var currentCardPoints int = 0
+		for _, winningNumber := range winningNumbers {
+			// Check if winningNumber exists in myNumber
+			for _, mynummyNumber := range myNumbers {
+				if winningNumber == mynummyNumber {
+					if currentCardPoints == 0 {
+						currentCardPoints = 1
+					} else {
+						currentCardPoints *= 2
+					}
+				}
+			}
+		}
+
+		totalPoints += currentCardPoints
 	}
 
+	fmt.Println(totalPoints)
 }
