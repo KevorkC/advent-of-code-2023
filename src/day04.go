@@ -52,9 +52,6 @@ func main() {
 			myNumbers = append(myNumbers, myNumberInt)
 		}
 
-		// fmt.Println("Winning numbers:", winningNumbers)
-		// fmt.Println("My numbers:", myNumbers)
-
 		// Now we have the winning numbers and my numbers in two lists
 		// Compare how many from the winning numbers are in my numbers
 		var currentCardPoints int = 0
