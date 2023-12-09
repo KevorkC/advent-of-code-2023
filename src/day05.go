@@ -12,9 +12,12 @@ import (
 )
 
 type categoryMap struct {
-	ID                  int
-	mapName             string
-	sourceToDestination map[int]int
+	ID              int
+	mapName         string
+	destinationList []int
+	sourceList      []int
+	rangeLengthList []int
+	// sourceToDestination map[int]int
 }
 
 // The worker function that parses the map and creates a map
@@ -43,28 +46,66 @@ func parseAndCreateMapWorker(id int, jobs <-chan []string, results chan<- catego
 			fmt.Println("Error - Unknown map name:", sdm.mapName)
 		}
 
-		sdm.sourceToDestination = make(map[int]int)
+		// sdm.sourceToDestination = make(map[int]int)
+		var sourceList []int
+		var destinationList []int
+		var rangeLengthList []int
 		for _, line := range job[1:] {
-			var source int
-			var destination int
-			var rangeLength int
 			for i, subStrNumber := range strings.Fields(line) {
 				if i == 0 {
-					destination, _ = strconv.Atoi(subStrNumber)
+					var destination, e = strconv.Atoi(subStrNumber)
+					if e != nil {
+						fmt.Print("Error converting destination to number:", e)
+					} else {
+						destinationList = append(destinationList, destination)
+					}
 				} else if i == 1 {
-					source, _ = strconv.Atoi(subStrNumber)
+					var source, e = strconv.Atoi(subStrNumber)
+					if e != nil {
+						fmt.Print("Error converting source to number:", e)
+					} else {
+						sourceList = append(sourceList, source)
+					}
 				} else if i == 2 {
-					rangeLength, _ = strconv.Atoi(subStrNumber)
+					var rangeLength, e = strconv.Atoi(subStrNumber)
+					if e != nil {
+						fmt.Print("Error converting rangeLength to number:", e)
+					} else {
+						rangeLengthList = append(rangeLengthList, rangeLength)
+					}
 				}
 			}
-			// Now populate the map
-			for i := 0; i < rangeLength; i++ {
-				sdm.sourceToDestination[source+i] = destination + i
-			}
-		}
-		results <- sdm
 
+		}
+
+		sdm.destinationList = destinationList
+		sdm.sourceList = sourceList
+		sdm.rangeLengthList = rangeLengthList
+		results <- sdm
 	}
+}
+
+// The following function calculates the destination from the source, given the map
+func fromSourceToDestination(sourceTarget int, category categoryMap) int {
+	var sourceList []int = category.sourceList
+	var destinationList []int = category.destinationList
+	var rangeLengthList []int = category.rangeLengthList
+
+	for i := 0; i < len(sourceList); i++ {
+		sourceStart := sourceList[i]
+		destinationStart := destinationList[i]
+		rangeLength := rangeLengthList[i]
+
+		// Check if the sourceTarget is within the current range
+		if sourceTarget >= sourceStart && sourceTarget < sourceStart+rangeLength {
+			// Calculate the offset from the start of the source range
+			offset := sourceTarget - sourceStart
+			// Return the corresponding destination number
+			return destinationStart + offset
+		}
+	}
+	// If the sourceTarget is not in any range, return the sourceTarget itself
+	return sourceTarget
 }
 
 func main() {
@@ -82,9 +123,6 @@ func main() {
 		fileLines = append(fileLines, line)
 		// fmt.Println("Appending line:", line)
 	}
-	// Print the file lines
-	// for _, line := range fileLines {
-	// 	fmt.Println(line)
 
 	// Parse the seeds into a list of integers
 	var seeds []int // Saving the seeds for later
@@ -145,7 +183,6 @@ func main() {
 	for r := range results {
 		maps = append(maps, r)
 	}
-	// fmt.Println("LOOK HERE:", maps[0].sourceToDestination[50])
 
 	// Sorting the maps by the lowest ID to the highest ID
 	var sortedMaps []categoryMap
@@ -156,11 +193,7 @@ func main() {
 			}
 		}
 	}
-	// println(sortedMaps[0].mapName)
 
-	// Finding the locaiton for each seed, by tracking through the seed-to-soil map, soil-to-fertilizer map, fertilizer-to-water map,
-	// water-to-light map, light-to-temperature map, temperature-to-humidity map, and humidity-to-location map.
-	// But if the map does not contain a value for the key it is given, then value = key
 	// First we make a list of each seed's location
 	var seedLocations []int = make([]int, len(seeds))
 	// fmt.Println("Seeds:", seeds)
@@ -169,24 +202,15 @@ func main() {
 	for seedID, seed := range seeds {
 		var currentValue int = seed
 		for i, m := range sortedMaps {
-			var newValue, ok = m.sourceToDestination[currentValue]
+			var destination = fromSourceToDestination(currentValue, m)
+			currentValue = destination
 			// Checking that we're checking the right map, otherwise print an error
 			if m.ID != i+1 {
 				fmt.Println("Error - Wrong map ID:", m.ID, "Expected ID:", i+1)
 			}
-
-			if !ok {
-				// If the map does not contain the key, then the value is the key
-				// fmt.Println("Map", m.mapName, "does not contain the key", currentValue)
-				continue
-			} else {
-				// fmt.Println("Map", m.mapName, "contains the key", currentValue)
-				currentValue = newValue
-			}
 		}
 		seedLocations[seedID] = currentValue
 	}
-	// fmt.Println("Seed:", seeds[0], "Last location", seedLocations[0])
 
 	var lowestLocation int = math.MaxInt32
 	for _, seedLocation := range seedLocations {
@@ -197,49 +221,3 @@ func main() {
 	fmt.Println("Lowest location:", lowestLocation)
 
 }
-
-/* Input example:
-seeds: 79 14 55 13
-
-seed-to-soil map:
-50 98 2
-52 50 48
-
-soil-to-fertilizer map:
-0 15 37
-37 52 2
-39 0 15
-
-fertilizer-to-water map:
-49 53 8
-0 11 42
-42 0 7
-57 7 4
-
-water-to-light map:
-88 18 7
-18 25 70
-
-light-to-temperature map:
-45 77 23
-81 45 19
-68 64 13
-
-temperature-to-humidity map:
-0 69 1
-1 0 69
-
-humidity-to-location map:
-60 56 37
-56 93 4
-*/
-
-/* Sorting
-ID 1 = seed-to-soil map:
-ID 2 = soil-to-fertilizer map:
-ID 3 = fertilizer-to-water map:
-ID 4 = water-to-light map:
-ID 5 = light-to-temperature map:
-ID 6 = temperature-to-humidity map:
-ID 7 = humidity-to-location map:
-*/
