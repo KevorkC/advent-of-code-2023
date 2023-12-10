@@ -17,14 +17,12 @@ type categoryMap struct {
 	destinationList []int
 	sourceList      []int
 	rangeLengthList []int
-	// sourceToDestination map[int]int
 }
 
 // The worker function that parses the map and creates a map
 func parseAndCreateMapWorker(id int, jobs <-chan []string, results chan<- categoryMap) {
 	for job := range jobs { // job is taken from the pool of jobs
 		var sdm categoryMap
-		// fmt.Println("Worker", id, "is parsing the map", job)
 		sdm.mapName = job[0]
 
 		switch sdm.mapName {
@@ -46,7 +44,6 @@ func parseAndCreateMapWorker(id int, jobs <-chan []string, results chan<- catego
 			fmt.Println("Error - Unknown map name:", sdm.mapName)
 		}
 
-		// sdm.sourceToDestination = make(map[int]int)
 		var sourceList []int
 		var destinationList []int
 		var rangeLengthList []int
@@ -121,7 +118,6 @@ func main() {
 	for scanner.Scan() {
 		var line string = scanner.Text()
 		fileLines = append(fileLines, line)
-		// fmt.Println("Appending line:", line)
 	}
 
 	// Parse the seeds into a list of integers
@@ -133,7 +129,7 @@ func main() {
 		}
 		seeds = append(seeds, seed)
 	}
-	// fmt.Println("seeds:", seeds)
+
 	fileLines = fileLines[1:] // Remove the seeds line from the fileLines
 
 	// Defining the job and result channels
@@ -141,7 +137,6 @@ func main() {
 	results := make(chan categoryMap, 7) // Each worker will return a map
 
 	// Preparing the jobs for the workers
-	// var mapSlice [][]string // The slice of strings that will be sent to the workers
 	var currentMapStart int = 0
 	for i, line := range fileLines {
 		if line == "" || i == len(fileLines)-1 {
@@ -163,7 +158,6 @@ func main() {
 	// operations like network calls or disk access, where the CPU is often waiting and not continuously processing.
 	var numWorkers int = runtime.NumCPU()
 	var wg sync.WaitGroup
-	// fmt.Println("Using", numWorkers, "workers")
 	for w := 1; w <= numWorkers; w++ {
 		wg.Add(1)
 		go func(w int) {
@@ -196,7 +190,6 @@ func main() {
 
 	// First we make a list of each seed's location
 	var seedLocations []int = make([]int, len(seeds))
-	// fmt.Println("Seeds:", seeds)
 
 	println("Finding the location for each seed")
 	for seedID, seed := range seeds {

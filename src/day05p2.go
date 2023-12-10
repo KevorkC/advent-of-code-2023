@@ -17,7 +17,6 @@ type categoryMap struct {
 	destinationList []int
 	sourceList      []int
 	rangeLengthList []int
-	// sourceToDestination map[int]int
 }
 
 type seedPair struct {
@@ -26,10 +25,9 @@ type seedPair struct {
 }
 
 // The worker function that parses the map and creates a map
-func parseSourceToDestinationWorker(id int, jobs <-chan []string, results chan<- categoryMap) {
+func parseSourceToDestinationWorker(jobs <-chan []string, results chan<- categoryMap) {
 	for job := range jobs { // job is taken from the pool of jobs
 		var sdm categoryMap
-		// fmt.Println("Worker", id, "is parsing the map", job)
 		sdm.mapName = job[0]
 
 		switch sdm.mapName {
@@ -51,7 +49,6 @@ func parseSourceToDestinationWorker(id int, jobs <-chan []string, results chan<-
 			fmt.Println("Error - Unknown map name:", sdm.mapName)
 		}
 
-		// sdm.sourceToDestination = make(map[int]int)
 		var sourceList []int
 		var destinationList []int
 		var rangeLengthList []int
@@ -146,11 +143,9 @@ func main() {
 	for scanner.Scan() {
 		var line string = scanner.Text()
 		fileLines = append(fileLines, line)
-		// fmt.Println("Appending line:", line)
 	}
 
 	// Parse the seeds into a list of integers
-	// Example seeds: 79 14 55 13
 	var seeds []int // Saving the seeds for later
 	for _, seed := range strings.Fields(fileLines[0][7:]) {
 		seed, err := strconv.Atoi(seed)
@@ -159,7 +154,6 @@ func main() {
 		}
 		seeds = append(seeds, seed)
 	}
-	// fmt.Println("seeds:", seeds)
 
 	// Making the list of seedPair, where each seedPair is a start and a length
 	var seedPairList []seedPair
@@ -167,10 +161,6 @@ func main() {
 		newSeedPair := seedPair{start: seeds[i], length: seeds[i+1]}
 		seedPairList = append(seedPairList, newSeedPair)
 	}
-	// Printing the seedPairList
-	// for i, seedPair := range seedPairList {
-	// 	fmt.Println("Seed pair", i, ":", seedPair)
-	// }
 
 	fileLines = fileLines[1:] // Remove the seeds line from the fileLines
 
@@ -179,7 +169,6 @@ func main() {
 	results := make(chan categoryMap, 7) // Each worker will return a map
 
 	// Preparing the jobs for the workers
-	// var mapSlice [][]string // The slice of strings that will be sent to the workers
 	var currentMapStart int = 0
 	for i, line := range fileLines {
 		if line == "" || i == len(fileLines)-1 {
@@ -204,10 +193,10 @@ func main() {
 	fmt.Println("Using", numWorkers, "workers")
 	for w := 1; w <= numWorkers; w++ {
 		wg.Add(1)
-		go func(w int) {
+		go func() {
 			defer wg.Done()
-			parseSourceToDestinationWorker(w, jobs, results)
-		}(w)
+			parseSourceToDestinationWorker(jobs, results)
+		}()
 	}
 
 	// Wait for all the workers in the WaitGroup to finish.
@@ -234,20 +223,43 @@ func main() {
 
 	// Now we have seedPairList and function, fromSourceToDestination, that takes a source and a map and returns the destination
 	println("Finding the location for each seed")
-	// Making getLowestLocationFromSeedPair a goroutine
-	// We add the same number of workers as there are cores in the CPU
+
+	// Initializing lowestLocation with the maximum possible integer value.
 	var lowestLocation int = math.MaxInt32
+
+	// Using a mutex to safely update lowestLocation from multiple goroutines.
+	var mutex sync.Mutex
+
 	var wg2 sync.WaitGroup
+
+	// Creating a channel to distribute seedPairs to workers.
+	seedPairChan := make(chan seedPair, len(seedPairList))
+
+	// Starting a fixed number of worker goroutines.
 	for worker := 0; worker < numWorkers; worker++ {
 		wg2.Add(1)
-		go func(seedPair seedPair) {
+		go func() {
 			defer wg2.Done()
-			var seedLocation int = getLowestLocationFromSeedPair(seedPair, sortedMaps)
-			if seedLocation < lowestLocation {
-				lowestLocation = seedLocation
+			for seedPair := range seedPairChan {
+				seedLocation := getLowestLocationFromSeedPair(seedPair, sortedMaps)
+				mutex.Lock()
+				if seedLocation < lowestLocation {
+					lowestLocation = seedLocation
+				}
+				mutex.Unlock()
 			}
-		}(seedPairList[worker])
+		}()
 	}
+
+	// Distributing the seedPairs to the workers.
+	for _, seedPair := range seedPairList {
+		seedPairChan <- seedPair
+	}
+
+	// Closing the channel to signal workers that no more seedPairs will be sent.
+	close(seedPairChan)
+
+	// Waiting for all goroutines to finish.
 	wg2.Wait()
 
 	fmt.Println("Lowest location:", lowestLocation)
