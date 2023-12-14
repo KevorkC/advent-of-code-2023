@@ -49,6 +49,19 @@ func calculatePossibleSolutions(race raceInfo) int {
 	return possibleSolutions
 }
 
+func concatenateInts(ints []int) int {
+	var resultStr string
+	for _, num := range ints {
+		resultStr += strconv.Itoa(num)
+	}
+
+	var resultInt, err = strconv.Atoi(resultStr)
+	if err != nil {
+		fmt.Println("Error converting string to int:", err)
+	}
+	return resultInt
+}
+
 func main() {
 	file, err := os.Open("files/day06")
 	if err != nil {
@@ -64,8 +77,8 @@ func main() {
 		fileLines = append(fileLines, line)
 	}
 
-	var raceTimeList []int = parseStringToIntList(fileLines[0][9:])
-	var raceRecordList []int = parseStringToIntList(fileLines[1][9:])
+	var raceTimeList []int = []int{concatenateInts(parseStringToIntList(fileLines[0][9:]))}
+	var raceRecordList []int = []int{concatenateInts(parseStringToIntList(fileLines[1][9:]))}
 
 	var raceList []raceInfo = fromListsToRaceInfo(raceTimeList, raceRecordList)
 
