@@ -99,7 +99,7 @@ func fromSourceToDestination(sourceTarget int, category categoryMap) int {
 		rangeLength := rangeLengthList[i]
 
 		// Check if the sourceTarget is within the current range
-		if sourceTarget >= sourceStart && sourceTarget < sourceStart+rangeLength {
+		if sourceStart <= sourceTarget && sourceTarget < sourceStart+rangeLength {
 			// Calculate the offset from the start of the source range
 			offset := sourceTarget - sourceStart
 			// Return the corresponding destination number
