@@ -6,7 +6,6 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 type hand struct {
@@ -29,48 +28,70 @@ func cardsToType(cards string) int {
 
 	// Looping through the hashMap to find the type of the hand
 	for _, value := range cardMap {
-		if value == 5 {
+		var numJoker int = cardMap['J']
+
+		if value == 5 { // AAAAA
 			//fmt.Println(cards, "= Five of a kind")
 			return 7
-		} else if value == 4 {
+		} else if value == 4 { // AA8AA
 			//fmt.Println(cards, "= Four of a kind")
+			if numJoker > 0 {
+				return 7
+			}
 			return 6
-		} else if value == 3 && uniqueCards == 2 {
+		} else if value == 3 && uniqueCards == 2 { // 23332
 			//fmt.Println(cards, "= Full house")
+			if numJoker > 0 {
+				return 7
+			}
 			return 5
-		} else if value == 3 && uniqueCards == 3 {
+		} else if value == 3 && uniqueCards == 3 { // TTT98
 			//fmt.Println(cards, "= Three of a kind")
+			if numJoker > 0 {
+				return 6
+			}
 			return 4
-		} else if value == 2 && uniqueCards == 3 {
+		} else if value == 2 && uniqueCards == 3 { // 23432
 			//fmt.Println(cards, "= Two pair")
+			if numJoker == 2 {
+				return 6
+			} else if numJoker == 1 {
+				return 5
+			}
 			return 3
-		} else if value == 2 && uniqueCards == 4 {
+		} else if value == 2 && uniqueCards == 4 { // A23A4
 			//fmt.Println(cards, "= One pair")
+			if numJoker > 0 {
+				return 4
+			}
 			return 2
-		} else if value == 1 && uniqueCards == 5 {
+		} else if value == 1 && uniqueCards == 5 { // 23456
 			//fmt.Println(cards, "= High card")
+			if numJoker == 1 {
+				return 2
+			}
 			return 1
 		}
 	}
 	return -1
 }
 
-func cardsToTypeJoker(cards string) int {
-	if !strings.ContainsRune(cards, 'J') {
-		return cardsToType(cards)
-	}
+// func cardsToTypeJoker(cards string) int {
+// 	if !strings.ContainsRune(cards, 'J') {
+// 		return cardsToType(cards)
+// 	}
 
-	// Replaces all 'J' runes in the strings with all the other card types that it can be, and then find the highest type of those.
-	var highestType int = 0
-	for _, card := range "AKQT98765432" {
-		var newCards string = strings.ReplaceAll(cards, "J", string(card))
-		var newType int = cardsToType(newCards)
-		if newType > highestType {
-			highestType = newType
-		}
-	}
-	return highestType
-}
+// 	// Replaces all 'J' runes in the strings with all the other card types that it can be, and then find the highest type of those.
+// 	var highestType int = 0
+// 	for _, card := range "AKQT98765432" {
+// 		var newCards string = strings.ReplaceAll(cards, "J", string(card))
+// 		var newType int = cardsToType(newCards)
+// 		if newType > highestType {
+// 			highestType = newType
+// 		}
+// 	}
+// 	return highestType
+// }
 
 type CardStrength rune
 
@@ -175,7 +196,7 @@ func stringtoHand(line string) hand {
 
 	}
 	newHand.bid = bid
-	newHand._type = cardsToTypeJoker(newHand.cards)
+	newHand._type = cardsToType(newHand.cards)
 	return newHand
 }
 
