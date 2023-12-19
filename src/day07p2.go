@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 type hand struct {
@@ -54,10 +55,27 @@ func cardsToType(cards string) int {
 	return -1
 }
 
+func cardsToTypeJoker(cards string) int {
+	if !strings.ContainsRune(cards, 'J') {
+		return cardsToType(cards)
+	}
+
+	// Replaces all 'J' runes in the strings with all the other card types that it can be, and then find the highest type of those.
+	var highestType int = 0
+	for _, card := range "AKQT98765432" {
+		var newCards string = strings.ReplaceAll(cards, "J", string(card))
+		var newType int = cardsToType(newCards)
+		if newType > highestType {
+			highestType = newType
+		}
+	}
+	return highestType
+}
+
 type CardStrength rune
 
 const (
-	Jack CardStrength = iota
+	Joker CardStrength = iota
 	Two
 	Three
 	Four
@@ -72,7 +90,7 @@ const (
 	Ace
 )
 
-var order = []CardStrength{Ace, King, Queen, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Jack}
+var order = []CardStrength{Ace, King, Queen, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Joker}
 
 func runeToCardStrength(r rune) CardStrength {
 	switch r {
@@ -101,7 +119,7 @@ func runeToCardStrength(r rune) CardStrength {
 	case '2':
 		return Two
 	case 'J':
-		return Jack
+		return Joker
 	default:
 		panic("Invalid rune")
 	}
@@ -143,10 +161,6 @@ func sortHands(hands []hand) []hand {
 		sortedHandsList = append(sortedHandsList, typeMap[i]...)
 	}
 
-	// Printing the list
-	for _, hand := range sortedHandsList {
-		fmt.Println(hand.cards, hand._type)
-	}
 	println("")
 
 	return sortedHandsList
@@ -161,7 +175,7 @@ func stringtoHand(line string) hand {
 
 	}
 	newHand.bid = bid
-	newHand._type = cardsToType(newHand.cards)
+	newHand._type = cardsToTypeJoker(newHand.cards)
 	return newHand
 }
 

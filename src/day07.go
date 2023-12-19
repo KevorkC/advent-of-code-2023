@@ -66,13 +66,13 @@ const (
 	Eight
 	Nine
 	Ten
-	Jack
+	Joker
 	Queen
 	King
 	Ace
 )
 
-var order = []CardStrength{Ace, King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two}
+var order = []CardStrength{Ace, King, Queen, Joker, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two}
 
 func runeToCardStrength(r rune) CardStrength {
 	switch r {
@@ -83,7 +83,7 @@ func runeToCardStrength(r rune) CardStrength {
 	case 'Q':
 		return Queen
 	case 'J':
-		return Jack
+		return Joker
 	case 'T':
 		return Ten
 	case '9':
