@@ -57,7 +57,8 @@ func cardsToType(cards string) int {
 type CardStrength rune
 
 const (
-	Two CardStrength = iota
+	Jack CardStrength = iota
+	Two
 	Three
 	Four
 	Five
@@ -66,13 +67,12 @@ const (
 	Eight
 	Nine
 	Ten
-	Jack
 	Queen
 	King
 	Ace
 )
 
-var order = []CardStrength{Ace, King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two}
+var order = []CardStrength{Ace, King, Queen, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two, Jack}
 
 func runeToCardStrength(r rune) CardStrength {
 	switch r {
@@ -82,8 +82,6 @@ func runeToCardStrength(r rune) CardStrength {
 		return King
 	case 'Q':
 		return Queen
-	case 'J':
-		return Jack
 	case 'T':
 		return Ten
 	case '9':
@@ -102,6 +100,8 @@ func runeToCardStrength(r rune) CardStrength {
 		return Three
 	case '2':
 		return Two
+	case 'J':
+		return Jack
 	default:
 		panic("Invalid rune")
 	}
