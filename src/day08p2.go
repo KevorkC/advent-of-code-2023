@@ -12,6 +12,42 @@ type node struct {
 	rightID   string
 }
 
+type nodeWithZ struct {
+	foundIn int
+	nodeID  string
+}
+
+// Function to find the Greatest Common Divisor (GCD)
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}
+
+// Function to find the Least Common Multiple (LCM) of two numbers
+func lcm(a, b int) int {
+	if a == 0 || b == 0 {
+		return 0
+	}
+	return a / gcd(a, b) * b // Rearranged to avoid potential overflow
+}
+
+// Function to find the LCM of a list of integers
+func lcmOfList(numbers []int) int {
+	if len(numbers) == 0 {
+		return 0
+	}
+	result := numbers[0]
+	for _, number := range numbers[1:] {
+		result = lcm(result, number)
+		if result == 0 {
+			break
+		}
+	}
+	return result
+}
+
 func parseNodes(str []string) []node {
 	var nodes []node
 	for _, line := range str {
@@ -48,6 +84,45 @@ func moveAllTo(side rune, nodes []node, nodeHash map[string]node) []node {
 	return nodes
 }
 
+func areAllZNodesFound(nodeWithZ []nodeWithZ) bool {
+	for _, node := range nodeWithZ {
+		if node.foundIn == -1 {
+			return false
+		}
+	}
+	return true
+}
+
+func calculateTotalSteps(targetNodes []nodeWithZ) int {
+	if !areAllZNodesFound(targetNodes) {
+		fmt.Println("Error: calculateTotalSteps called before all Z nodes are found")
+	}
+
+	// Making the list of integers that will be used to find the LCM
+	var integersToLCM []int
+	for _, node := range targetNodes {
+		integersToLCM = append(integersToLCM, node.foundIn)
+	}
+
+	fmt.Println("Integers to LCM:", integersToLCM)
+	// Using Least Common Multiple
+	return lcmOfList(integersToLCM)
+}
+
+func findNewZNodes(currentNodes []node, targetNodes []nodeWithZ, currentStep int) []nodeWithZ {
+	for _, currentNode := range currentNodes {
+		for i, _ := range targetNodes {
+			if currentNode.currentID == targetNodes[i].nodeID {
+				if targetNodes[i].foundIn == -1 {
+					fmt.Println("Found new Z node:", currentNode.currentID, "at step:", currentStep)
+					targetNodes[i].foundIn = currentStep
+				}
+			}
+		}
+	}
+	return targetNodes
+}
+
 func main() {
 	file, err := os.Open("files/day08")
 	if err != nil {
@@ -80,15 +155,35 @@ func main() {
 		}
 	}
 
+	// zNodes are all the nodes that end with Z
+	var zNodes []node
+	for _, node := range nodes {
+		if endsWith('Z', node.currentID) {
+			zNodes = append(zNodes, node)
+		}
+	}
+
+	// targetNodes are all the the zNodes that are found in the instructions
+	var targetNodes []nodeWithZ
+	for _, node := range zNodes {
+		targetNodes = append(targetNodes, nodeWithZ{foundIn: -1, nodeID: node.currentID})
+	}
+
 	var steps int = 0
 	for {
-		if doAllEndWithZ(currentNodes) {
-			fmt.Println("All current node IDs end with a Z, stopped at step", steps)
+		if areAllZNodesFound(targetNodes) {
+			fmt.Println("Target Nodes:", targetNodes)
+			fmt.Println("Found all loops in", calculateTotalSteps(targetNodes), "steps")
 			break
-		} else {
-			var nextSide = instructions[steps%len(instructions)]
-			currentNodes = moveAllTo(rune(nextSide), currentNodes, nodesMap)
-			steps++
+		}
+
+		var nextSide = instructions[steps%len(instructions)]
+		currentNodes = moveAllTo(rune(nextSide), currentNodes, nodesMap)
+		steps++
+		targetNodes = findNewZNodes(currentNodes, targetNodes, steps)
+
+		if steps%10000 == 0 {
+			fmt.Println("Currently at step", steps)
 		}
 	}
 }
